@@ -2,15 +2,3 @@ inbox/
 processed/
 How to use this app.txt
 
-echo "# trigger_app" >> README.md
-git init
-git add README.md
-git commit -m "Initial commit: simple trigger-based app"
-git branch -M master
-git remote add origin https://github.com/cybersurg/trigger_app.git
-git push -u origin master
-
-
-git remote add origin https://github.com/cybersurg/trigger_app.git
-git branch -M main
-git push -u origin main
