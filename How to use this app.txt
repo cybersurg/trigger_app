@@ -1,0 +1,97 @@
+Here is a simple, fully functional **Trigger-Based Application** written in Python. 
+
+To make it easy to run, we won't use any complex servers or external libraries. Instead, we will build a **File-Watcher App**. 
+
+### The Scenario
+* **The Trigger:** A new file is dropped into an `inbox` folder.
+* **The Condition:** The file name contains the word "urgent".
+* **The Action:** The app "sends a notification" (prints a message) and moves the file to a `processed` folder.
+
+### The Code
+
+Save the following code as `trigger_app.py` and run it.
+
+```python
+import os
+import time
+import shutil
+
+# --- CONFIGURATION ---
+INBOX_FOLDER = "inbox"
+PROCESSED_FOLDER = "processed"
+
+# Create folders if they don't exist
+os.makedirs(INBOX_FOLDER, exist_ok=True)
+os.makedirs(PROCESSED_FOLDER, exist_ok=True)
+
+# Keep track of files we've already seen so we don't process them twice
+processed_files = set()
+
+print("🚀 Trigger App Started!")
+print(f"👀 Watching folder: '{INBOX_FOLDER}'")
+print("💡 Tip: Create a text file in the 'inbox' folder to test it.\n")
+
+# --- THE MAIN EVENT LOOP ---
+while True:
+    try:
+        # 1. THE TRIGGER: Detect new files in the inbox
+        current_files = set(os.listdir(INBOX_FOLDER))
+        new_files = current_files - processed_files
+
+        for file in new_files:
+            file_path = os.path.join(INBOX_FOLDER, file)
+            
+            # Ignore directories, only look at files
+            if os.path.isfile(file_path):
+                
+                # 2. THE CONDITION: Check if it meets our rules
+                if "urgent" in file.lower():
+                    
+                    # 3. THE ACTION: Execute the automated task
+                    print(f"🚨 TRIGGER FIRED! Urgent file detected: {file}")
+                    print("⏳ ACTION: Sending email notification to manager...")
+                    
+                    # Simulate network delay (sending an email)
+                    time.sleep(1.5) 
+                    
+                    print(f"✅ SUCCESS: Notification sent for '{file}'!")
+                    
+                    # Move file to processed folder
+                    shutil.move(file_path, os.path.join(PROCESSED_FOLDER, file))
+                    print(f"📁 File moved to '{PROCESSED_FOLDER}'.\n")
+
+                else:
+                    # Action for non-matching conditions
+                    print(f"ℹ️ File '{file}' does not meet conditions. Ignoring and archiving.")
+                    shutil.move(file_path, os.path.join(PROCESSED_FOLDER, file))
+                    print("-" * 40)
+
+            # Mark file as processed so we don't trigger on it again
+            processed_files.add(file)
+
+        # Pause briefly before checking again (Polling interval)
+        time.sleep(2)
+
+    except KeyboardInterrupt:
+        print("\n🛑 App stopped by user.")
+        break
+```
+
+### How to Test It
+
+1. **Run the app:** Open your terminal or command prompt and run `python trigger_app.py`.
+2. **Test the Condition (Fails):** Create a file named `notes.txt` inside the `inbox` folder. Watch the terminal. The app will see it, realize it doesn't say "urgent", and just archive it.
+3. **Test the Trigger (Succeeds):** Create a file named `urgent_report.txt` inside the `inbox` folder. Watch the terminal. The app will detect it, trigger the "email notification" action, and move the file!
+
+***
+
+### How this maps to real-world Trigger Apps
+
+While this is a simple local script, the **architecture** is exactly the same as enterprise tools like Zapier, AWS EventBridge, or IFTTT:
+
+1. **Polling vs. Webhooks:** Our app uses *polling* (checking the folder every 2 seconds). In the real world, most trigger apps use **Webhooks** (the folder instantly "pushes" a signal to the app the millisecond a file is created, which is faster and uses less CPU).
+2. **State Tracking:** Notice the `processed_files = set()` variable? In real apps, this is called a **Database** or **State Store**. It remembers what has already been triggered so the app doesn't send you 1,000 duplicate emails.
+3. **Decoupling:** The app doesn't care *who* created the file or *how* it got there. It just listens for the event. This is the core philosophy of trigger-based systems.
+
+### Want to take it to the next level?
+If you want to build a real-world trigger app, the next step is to learn **Flask** or **FastAPI** in Python to create a Webhook receiver. That allows external services (like Stripe, GitHub, or Shopify) to send an HTTP request to your app, instantly triggering your code!
